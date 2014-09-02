@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="5.3.015">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="5.3.015" expanded="true" name="Process">
+    <description>This process allows Applications to connect to Twitter using the Application Only authorisation level.  
+
+For documentation for Twitter REST 1.1 API see here: 
+https://dev.twitter.com/docs/auth/application-only-auth</description>
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <parameter key="parallelize_main_process" value="false"/>
+    <process expanded="true">
+      <operator activated="true" class="read_xml" compatibility="5.3.015" expanded="true" height="60" name="Read XML (2)" width="90" x="45" y="30">
+        <parameter key="file" value="THORN/bearer_token.txt"/>
+        <parameter key="xpath_for_examples" value="//json"/>
+        <enumeration key="xpaths_for_attributes">
+          <parameter key="xpath_for_attribute" value="//access_token/text()"/>
+        </enumeration>
+        <parameter key="use_namespaces" value="true"/>
+        <list key="namespaces"/>
+        <parameter key="use_default_namespace" value="true"/>
+        <parameter key="parse_numbers" value="true"/>
+        <parameter key="decimal_character" value="."/>
+        <parameter key="grouped_digits" value="false"/>
+        <parameter key="grouping_character" value=","/>
+        <parameter key="date_format" value=""/>
+        <list key="annotations"/>
+        <parameter key="time_zone" value="SYSTEM"/>
+        <parameter key="locale" value="English (United States)"/>
+        <list key="data_set_meta_data_information"/>
+        <parameter key="read_not_matching_values_as_missings" value="true"/>
+        <parameter key="datamanagement" value="double_array"/>
+      </operator>
+      <operator activated="true" class="extract_macro" compatibility="5.3.015" expanded="true" height="60" name="Extract Macro (4)" width="90" x="179" y="30">
+        <parameter key="macro" value="bearer_token"/>
+        <parameter key="macro_type" value="data_value"/>
+        <parameter key="statistics" value="average"/>
+        <parameter key="attribute_name" value="//access_token/text()"/>
+        <parameter key="example_index" value="1"/>
+        <list key="additional_macros"/>
+      </operator>
+      <operator activated="true" class="web:get_webpage" compatibility="5.3.001" expanded="true" height="60" name="Get Page (3)" width="90" x="45" y="120">
+        <parameter key="url" value="https://api.twitter.com/1.1/search/tweets.json"/>
+        <parameter key="random_user_agent" value="false"/>
+        <parameter key="connection_timeout" value="10000"/>
+        <parameter key="read_timeout" value="10000"/>
+        <parameter key="follow_redirects" value="true"/>
+        <parameter key="accept_cookies" value="none"/>
+        <parameter key="cookie_scope" value="global"/>
+        <parameter key="request_method" value="GET"/>
+        <list key="query_parameters">
+          <parameter key="q" value="thorn"/>
+          <parameter key="count" value="100"/>
+        </list>
+        <list key="request_properties">
+          <parameter key="Authorization" value="%{bearer_token}"/>
+        </list>
+        <parameter key="override_encoding" value="false"/>
+        <parameter key="encoding" value="SYSTEM"/>
+      </operator>
+      <operator activated="true" class="web:json_to_xml" compatibility="5.3.001" expanded="true" height="60" name="Json to XML (2)" width="90" x="179" y="120">
+        <parameter key="enclosing_tag_name" value="results"/>
+      </operator>
+      <operator activated="true" class="text:cut_document" compatibility="5.3.002" expanded="true" height="60" name="Cut Document" width="90" x="313" y="120">
+        <parameter key="query_type" value="XPath"/>
+        <list key="string_machting_queries">
+          <parameter key="tweet" value="{.}"/>
+        </list>
+        <parameter key="attribute_type" value="Binominal"/>
+        <list key="regular_expression_queries"/>
+        <list key="regular_region_queries"/>
+        <list key="xpath_queries">
+          <parameter key="tweet" value="//results/statuses"/>
+        </list>
+        <list key="namespaces"/>
+        <parameter key="ignore_CDATA" value="true"/>
+        <parameter key="assume_html" value="false"/>
+        <list key="index_queries">
+          <parameter key="tweet" value="0.10"/>
+        </list>
+        <parameter key="parallelize_segment_processing" value="false"/>
+        <process expanded="true">
+          <operator activated="true" class="text:write_document" compatibility="5.3.002" expanded="true" height="76" name="Write Document (2)" width="90" x="179" y="75">
+            <parameter key="overwrite" value="true"/>
+            <parameter key="encoding" value="SYSTEM"/>
+          </operator>
+          <operator activated="true" class="read_xml" compatibility="5.3.015" expanded="true" height="60" name="Read XML (3)" width="90" x="313" y="75">
+            <parameter key="xpath_for_examples" value="//statuses"/>
+            <enumeration key="xpaths_for_attributes">
+              <parameter key="xpath_for_attribute" value="//text/text()"/>
+              <parameter key="xpath_for_attribute" value="//created_at//text()"/>
+              <parameter key="xpath_for_attribute" value="//user/name/text()"/>
+            </enumeration>
+            <parameter key="use_namespaces" value="true"/>
+            <list key="namespaces"/>
+            <parameter key="use_default_namespace" value="true"/>
+            <parameter key="parse_numbers" value="true"/>
+            <parameter key="decimal_character" value="."/>
+            <parameter key="grouped_digits" value="false"/>
+            <parameter key="grouping_character" value=","/>
+            <parameter key="date_format" value=""/>
+            <list key="annotations"/>
+            <parameter key="time_zone" value="SYSTEM"/>
+            <parameter key="locale" value="English (United States)"/>
+            <list key="data_set_meta_data_information"/>
+            <parameter key="read_not_matching_values_as_missings" value="true"/>
+            <parameter key="datamanagement" value="double_array"/>
+          </operator>
+          <operator activated="true" class="rename" compatibility="5.3.015" expanded="true" height="76" name="Rename" width="90" x="380" y="165">
+            <parameter key="old_name" value="//created_at//text()"/>
+            <parameter key="new_name" value="Created"/>
+            <list key="rename_additional_attributes">
+              <parameter key="//text/text()" value="text"/>
+              <parameter key="//user/name/text()" value="name"/>
+            </list>
+          </operator>
+          <operator activated="true" class="text:data_to_documents" compatibility="5.3.002" expanded="true" height="60" name="Data to Documents" width="90" x="514" y="75">
+            <parameter key="select_attributes_and_weights" value="true"/>
+            <list key="specify_weights">
+              <parameter key="name" value="1.0"/>
+              <parameter key="text" value="1.0"/>
+              <parameter key="Created" value="1.0"/>
+            </list>
+          </operator>
+          <connect from_port="segment" to_op="Write Document (2)" to_port="document"/>
+          <connect from_op="Write Document (2)" from_port="file" to_op="Read XML (3)" to_port="file"/>
+          <connect from_op="Read XML (3)" from_port="output" to_op="Rename" to_port="example set input"/>
+          <connect from_op="Rename" from_port="example set output" to_op="Data to Documents" to_port="example set"/>
+          <connect from_op="Data to Documents" from_port="documents" to_port="document 1"/>
+          <portSpacing port="source_segment" spacing="0"/>
+          <portSpacing port="sink_document 1" spacing="0"/>
+          <portSpacing port="sink_document 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="text:documents_to_data" compatibility="5.3.002" expanded="true" height="76" name="Documents to Data (2)" width="90" x="447" y="120">
+        <parameter key="text_attribute" value="tweets"/>
+        <parameter key="label_attribute" value="text"/>
+        <parameter key="add_meta_information" value="true"/>
+        <parameter key="datamanagement" value="double_sparse_array"/>
+      </operator>
+      <operator activated="true" class="append" compatibility="5.3.015" expanded="true" height="76" name="Append" width="90" x="581" y="120">
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="merge_type" value="all"/>
+      </operator>
+      <connect from_op="Read XML (2)" from_port="output" to_op="Extract Macro (4)" to_port="example set"/>
+      <connect from_op="Get Page (3)" from_port="output" to_op="Json to XML (2)" to_port="document"/>
+      <connect from_op="Json to XML (2)" from_port="document" to_op="Cut Document" to_port="document"/>
+      <connect from_op="Cut Document" from_port="documents" to_op="Documents to Data (2)" to_port="documents 1"/>
+      <connect from_op="Documents to Data (2)" from_port="example set" to_op="Append" to_port="example set 1"/>
+      <connect from_op="Append" from_port="merged set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>
